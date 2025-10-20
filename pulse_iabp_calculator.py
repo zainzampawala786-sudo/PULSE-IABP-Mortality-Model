@@ -3,7 +3,6 @@
 # Prediction Using Long-term Survival Estimation in AMI Patients Undergoing IABP Support
 # ═══════════════════════════════════════════════════════════════════════════════
 # Version: 1.0.0
-# Date: 2025-01-20
 # Developed by: Z. Zampawala et al. (2025)
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -19,7 +18,7 @@ import pandas as pd
 st.set_page_config(
     page_title="PULSE-IABP Risk Calculator",
     page_icon="🫀",
-    layout="wide",
+    layout="centered",
     initial_sidebar_state="collapsed"
 )
 
@@ -31,7 +30,7 @@ st.markdown("""
 <style>
     /* Main container */
     .main {
-        max-width: 1200px;
+        max-width: 900px;
         margin: 0 auto;
         padding: 2rem;
     }
@@ -174,6 +173,32 @@ st.markdown("""
     /* Radio button labels */
     .stRadio > label {
         font-weight: 500;
+    }
+    
+    /* Slider width control */
+    .stSlider {
+        max-width: 100% !important;
+    }
+    
+    /* Better spacing for columns */
+    [data-testid="column"] {
+        padding: 0 0.5rem;
+    }
+    
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .main {
+            max-width: 100%;
+            padding: 1rem;
+        }
+        
+        .header-title {
+            font-size: 1.5rem;
+        }
+        
+        .header-subtitle {
+            font-size: 0.9rem;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -488,7 +513,7 @@ with st.sidebar:
     st.markdown("**ALGORITHM SPECIFICATIONS:**")
     st.markdown("• Model: Support Vector Machine (RBF kernel)")
     st.markdown("• Calibration: Platt scaling (sigmoid)")
-    st.markdown("• Hyperparameters: C=1.0, γ=0.01")
+    st.markdown("• Hyperparameters: C=0.1, γ=auto, class_weight=balanced")
     st.markdown("• Feature Selection: 16 clinical variables")
     st.markdown("• Missing Data: Median imputation")
     
@@ -500,8 +525,8 @@ with st.sidebar:
     
     st.markdown("**PERFORMANCE METRICS:**")
     st.markdown("• External AUC: 0.768 (95% CI: 0.72-0.82)")
-    st.markdown("• Brier Score: 0.198")
-    st.markdown("• Calibration Slope: 0.98 (SE: 0.08)")
+    st.markdown("• Brier Score: 0.186")
+    st.markdown("• Calibration Slope: 0.918 (SE: 0.08)")
     
     st.markdown("---")
     
