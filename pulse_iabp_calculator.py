@@ -1,6 +1,7 @@
 # PULSE-IABP Risk Calculator
-# Version: 1.0.1 | Date: 2025-01-20
+# Version: 1.0.0 | Date: 2025-01-20
 # Training: n=476 (internal only) | External AUC: 0.768
+# FIX: Correct feature names (acei_use, underwent_CRRT)
 
 import streamlit as st
 import pickle
@@ -30,10 +31,6 @@ scaler = bundle["models"]["scaler"]
 ref_risks = bundle["predictions"]["all_internal_calibrated"]
 features = bundle["model_info"]["features"]
 
-# DEBUG: Show expected features
-if st.sidebar.checkbox("Show debug info"):
-    st.sidebar.write("Expected features:", features)
-
 def calculate_risk_level(prob, ref):
     return (prob > ref).mean() * 100
 
@@ -60,6 +57,8 @@ def get_risk_factors(inp):
         factors.append("CRRT required")
     if inp["vent"]:
         factors.append("Invasive ventilation")
+    if inp["hgb_min"] < 90:
+        factors.append(f"Minimum Hemoglobin ({inp['hgb_min']} g/L) - Severely low")
     return factors[:3]
 
 # Header
@@ -107,17 +106,15 @@ if not calc_btn:
         st.write("Training: n=476 (internal) | Validation: n=354 (external) | AUC: 0.768")
 else:
     try:
-        # Create feature mapping - THIS IS THE FIX
-        # Map user inputs to EXACT feature names expected by model
+        # CORRECTED FEATURE MAPPING
         feat_map = {}
         
-        # Go through each feature expected by the model
         for feature_name in features:
             if feature_name == "age":
                 feat_map[feature_name] = age
             elif feature_name == "beta_blocker_use":
                 feat_map[feature_name] = int(beta_blocker)
-            elif feature_name == "ace_inhibitor_use":
+            elif feature_name == "acei_use":  # ← CORRECTED
                 feat_map[feature_name] = int(ace_inhibitor)
             elif feature_name == "ticagrelor_use":
                 feat_map[feature_name] = int(ticagrelor)
@@ -125,7 +122,7 @@ else:
                 feat_map[feature_name] = int(invasive_vent)
             elif feature_name == "underwent_CPR":
                 feat_map[feature_name] = int(cpr)
-            elif feature_name == "crrt":
+            elif feature_name == "underwent_CRRT":  # ← CORRECTED
                 feat_map[feature_name] = int(crrt)
             elif feature_name == "hemoglobin_min":
                 feat_map[feature_name] = hgb_min
@@ -146,22 +143,15 @@ else:
             elif feature_name == "sodium_max":
                 feat_map[feature_name] = sodium_max
             else:
-                # If unknown feature, set to 0
                 feat_map[feature_name] = 0
                 st.warning(f"Unknown feature: {feature_name}")
         
-        # Create input array in correct order
         X = np.array([[feat_map[f] for f in features]])
-        
-        # Scale and predict
         X_scaled = scaler.transform(X)
         prob = model.predict_proba(X_scaled)[0, 1]
-        
-        # Calculate risk level
         risk_level = calculate_risk_level(prob, ref_risks)
         category, emoji = get_risk_category(risk_level)
         
-        # Display results
         st.markdown(f"### {emoji} PULSE-IABP Risk Level: **{risk_level:.0f}**")
         st.markdown(f"### Category: **{category}**")
         st.progress(risk_level / 100)
@@ -169,14 +159,14 @@ else:
         
         st.markdown("---")
         
-        # Risk factors
         inp = {
             "age": age, 
             "egfr": egfr, 
             "lactate": lactate_max, 
             "cpr": cpr, 
             "crrt": crrt, 
-            "vent": invasive_vent
+            "vent": invasive_vent,
+            "hgb_min": hgb_min
         }
         factors = get_risk_factors(inp)
         
@@ -195,9 +185,7 @@ else:
         
     except Exception as e:
         st.error(f"Error calculating risk: {e}")
-        st.write("Expected features:", features)
-        st.write("Provided features:", list(feat_map.keys()) if 'feat_map' in locals() else "None")
 
 st.markdown("---")
 st.warning("DISCLAIMER: For research and educational purposes only. NOT for clinical decision-making.")
-st.caption("Model: SVM-RBF + Platt | Training: n=476 | External AUC: 0.768 | Version: 1.0.1")
+st.caption("Model: SVM-RBF + Platt | Training: n=476 | External AUC: 0.768 | Version: 1.0.2")
