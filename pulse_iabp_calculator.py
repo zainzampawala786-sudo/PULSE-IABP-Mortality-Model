@@ -1,5 +1,5 @@
 # PULSE-IABP Risk Calculator
-# Version: 1.0.0 | Date: 2025-10-20
+# Version: 1.0.1 | Date: 2025-01-20
 # Training: n=476 (internal only) | External AUC: 0.768
 
 import streamlit as st
@@ -29,6 +29,10 @@ model = bundle["models"]["calibrated_svm"]
 scaler = bundle["models"]["scaler"]
 ref_risks = bundle["predictions"]["all_internal_calibrated"]
 features = bundle["model_info"]["features"]
+
+# DEBUG: Show expected features
+if st.sidebar.checkbox("Show debug info"):
+    st.sidebar.write("Expected features:", features)
 
 def calculate_risk_level(prob, ref):
     return (prob > ref).mean() * 100
@@ -102,40 +106,98 @@ if not calc_btn:
     with st.expander("About"):
         st.write("Training: n=476 (internal) | Validation: n=354 (external) | AUC: 0.768")
 else:
-    feat_map = {
-        "beta_blocker_use": beta_blocker, "invasive_ventilation": invasive_vent,
-        "ticagrelor_use": ticagrelor, "neutrophils_abs_min": neut_abs,
-        "underwent_CPR": cpr, "ace_inhibitor_use": ace_inhibitor,
-        "crrt": crrt, "hemoglobin_min": hgb_min, "age": age,
-        "neutrophils_pct_min": neut_pct, "hemoglobin_max": hgb_max,
-        "eGFR_CKD_EPI_21": egfr, "glucose_min": glucose_min,
-        "lactate_max": lactate_max, "sodium_max": sodium_max,
-        "rbc_count_max": rbc_max
-    }
-    X = np.array([[feat_map[f] for f in features]])
-    X_scaled = scaler.transform(X)
-    prob = model.predict_proba(X_scaled)[0, 1]
-    risk_level = calculate_risk_level(prob, ref_risks)
-    category, emoji = get_risk_category(risk_level)
-    st.markdown(f"### {emoji} PULSE-IABP Risk Level: **{risk_level:.0f}**")
-    st.markdown(f"### Category: **{category}**")
-    st.progress(risk_level / 100)
-    st.info(f"Higher risk than {risk_level:.0f}% of similar patients with AMI requiring IABP support.")
-    st.markdown("---")
-    inp = {"age": age, "egfr": egfr, "lactate": lactate_max, "cpr": cpr, "crrt": crrt, "vent": invasive_vent}
-    factors = get_risk_factors(inp)
-    if factors:
-        st.markdown("#### Key Risk Factors")
-        for fac in factors:
-            st.markdown(f"- {fac}")
-    st.markdown("---")
-    st.markdown("#### Risk Categories")
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("LOW", "0-24")
-    c2.metric("MEDIUM", "25-49")
-    c3.metric("ELEVATED", "50-74")
-    c4.metric("CRITICAL", "75-100")
+    try:
+        # Create feature mapping - THIS IS THE FIX
+        # Map user inputs to EXACT feature names expected by model
+        feat_map = {}
+        
+        # Go through each feature expected by the model
+        for feature_name in features:
+            if feature_name == "age":
+                feat_map[feature_name] = age
+            elif feature_name == "beta_blocker_use":
+                feat_map[feature_name] = int(beta_blocker)
+            elif feature_name == "ace_inhibitor_use":
+                feat_map[feature_name] = int(ace_inhibitor)
+            elif feature_name == "ticagrelor_use":
+                feat_map[feature_name] = int(ticagrelor)
+            elif feature_name == "invasive_ventilation":
+                feat_map[feature_name] = int(invasive_vent)
+            elif feature_name == "underwent_CPR":
+                feat_map[feature_name] = int(cpr)
+            elif feature_name == "crrt":
+                feat_map[feature_name] = int(crrt)
+            elif feature_name == "hemoglobin_min":
+                feat_map[feature_name] = hgb_min
+            elif feature_name == "hemoglobin_max":
+                feat_map[feature_name] = hgb_max
+            elif feature_name == "rbc_count_max":
+                feat_map[feature_name] = rbc_max
+            elif feature_name == "neutrophils_abs_min":
+                feat_map[feature_name] = neut_abs
+            elif feature_name == "neutrophils_pct_min":
+                feat_map[feature_name] = neut_pct
+            elif feature_name == "eGFR_CKD_EPI_21":
+                feat_map[feature_name] = egfr
+            elif feature_name == "glucose_min":
+                feat_map[feature_name] = glucose_min
+            elif feature_name == "lactate_max":
+                feat_map[feature_name] = lactate_max
+            elif feature_name == "sodium_max":
+                feat_map[feature_name] = sodium_max
+            else:
+                # If unknown feature, set to 0
+                feat_map[feature_name] = 0
+                st.warning(f"Unknown feature: {feature_name}")
+        
+        # Create input array in correct order
+        X = np.array([[feat_map[f] for f in features]])
+        
+        # Scale and predict
+        X_scaled = scaler.transform(X)
+        prob = model.predict_proba(X_scaled)[0, 1]
+        
+        # Calculate risk level
+        risk_level = calculate_risk_level(prob, ref_risks)
+        category, emoji = get_risk_category(risk_level)
+        
+        # Display results
+        st.markdown(f"### {emoji} PULSE-IABP Risk Level: **{risk_level:.0f}**")
+        st.markdown(f"### Category: **{category}**")
+        st.progress(risk_level / 100)
+        st.info(f"Higher risk than {risk_level:.0f}% of similar patients with AMI requiring IABP support.")
+        
+        st.markdown("---")
+        
+        # Risk factors
+        inp = {
+            "age": age, 
+            "egfr": egfr, 
+            "lactate": lactate_max, 
+            "cpr": cpr, 
+            "crrt": crrt, 
+            "vent": invasive_vent
+        }
+        factors = get_risk_factors(inp)
+        
+        if factors:
+            st.markdown("#### Key Risk Factors")
+            for fac in factors:
+                st.markdown(f"- {fac}")
+        
+        st.markdown("---")
+        st.markdown("#### Risk Categories")
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("LOW", "0-24")
+        c2.metric("MEDIUM", "25-49")
+        c3.metric("ELEVATED", "50-74")
+        c4.metric("CRITICAL", "75-100")
+        
+    except Exception as e:
+        st.error(f"Error calculating risk: {e}")
+        st.write("Expected features:", features)
+        st.write("Provided features:", list(feat_map.keys()) if 'feat_map' in locals() else "None")
 
 st.markdown("---")
 st.warning("DISCLAIMER: For research and educational purposes only. NOT for clinical decision-making.")
-st.caption("Model: SVM-RBF + Platt | Training: n=476 | External AUC: 0.768 | Version: 1.0.0")
+st.caption("Model: SVM-RBF + Platt | Training: n=476 | External AUC: 0.768 | Version: 1.0.1")
