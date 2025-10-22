@@ -221,6 +221,9 @@ model = bundle["models"]["calibrated_svm"]
 scaler = bundle["models"]["scaler"]
 ref_risks = bundle["predictions"]["all_internal_calibrated"]
 features = bundle["model_info"]["features"]
+# Initialize variables to avoid NameError before calculation
+prob = None
+risk_level = None
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # HELPER FUNCTIONS
@@ -462,6 +465,17 @@ if calc_btn:
         Patient's risk is higher than <strong>{risk_level:.0f}%</strong> of comparable AMI patients requiring intra-aortic balloon pump support.
     </div>
     """, unsafe_allow_html=True)
+    # === Detailed Explanation (only shows after calculation) ===
+with st.expander("How this score is computed (details)", expanded=False):
+    if prob is None:
+        st.info("Enter inputs and click **CALCULATE RISK SCORE** to see details.")
+    else:
+        prob_pct = float(prob * 100.0)
+        prob_cat = categorize_by_probability(prob)  # Uses frozen thresholds
+        st.markdown(f"**Calibrated probability:** {prob_pct:.1f}%")
+        st.markdown(f"**Probability category (frozen):** {prob_cat}")
+        st.markdown(f"**Display score (0–100):** percentile relative to internal cohort.")
+        st.caption("Note: The 0–100 score is a percentile rank (not an absolute probability).")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # DETAILS (research-only): calibrated probability & frozen thresholds
@@ -572,4 +586,5 @@ with st.sidebar:
     
     © 2025 Z. Zampawala et al. All rights reserved.
     """)
+
 
