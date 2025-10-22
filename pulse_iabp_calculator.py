@@ -503,9 +503,9 @@ if calc_btn:
         cat_prob = categorize_by_probability(prob)
 
         st.write(
-            "**Display score (0–100)** is the percentile rank of this patient’s "
-            "**calibrated mortality probability** vs. the internal (Tongji) reference cohort. "
-            "E.g., score 80 ⇒ higher risk than 80% of comparable patients."
+    "**Display score (0–100)** represents the percentile rank of this patient’s "
+    "**calibrated mortality probability** relative to the internal (Tongji Hospital) reference cohort. "
+    "For example, a score of 80 indicates a higher predicted risk than 80% of comparable AMI patients requiring IABP support."
         )
 
         c1, c2, c3 = st.columns(3)
@@ -526,8 +526,8 @@ if calc_btn:
         )
 
         st.caption(
-            "The on-screen 0–100 score is a percentile (rank) for user-friendly display. "
-            "The thresholds above use the calibrated probability and are frozen from the internal data."
+    "The on-screen 0–100 score is a percentile rank for intuitive interpretation. "
+    "Probability thresholds are based on calibrated outputs and fixed from the internal cohort."
         )
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -589,5 +589,6 @@ with st.sidebar:
     
      2025 Z. Zampawala et al. All rights reserved.
     """)
+
 
 
