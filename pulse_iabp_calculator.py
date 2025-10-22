@@ -477,35 +477,9 @@ with st.expander("How this score is computed (details)", expanded=False):
         st.markdown(f"**Display score (0–100):** percentile relative to internal cohort.")
         st.caption("Note: The 0–100 score is a percentile rank (not an absolute probability).")
 
-# ─────────────────────────────────────────────────────────────────────────────
-# DETAILS (research-only): calibrated probability & frozen thresholds
-# ─────────────────────────────────────────────────────────────────────────────
-with st.expander("Details (research-only): model probability & thresholds"):
-    prob_pct = float(prob * 100.0)
-    cat_prob = categorize_by_probability(prob)
-
-    st.markdown(
-        f"- **Calibrated probability**: **{prob_pct:.1f}%**  \n"
-        f"- **Percentile score (0–100)**: **{risk_level:.0f}**  \n"
-        f"- **Probability-based tier** (frozen on internal): **{cat_prob}**"
-    )
-
-    st.markdown("**Probability thresholds (fixed from internal cohort):**")
-    th = PROB_THRESHOLDS
-    st.markdown(
-        f"""
-        - LOW: p < **{th['low']:.2f}**  
-        - MEDIUM: **{th['low']:.2f} ≤ p < {th['medium']:.2f}**  
-        - ELEVATED: **{th['medium']:.2f} ≤ p < {th['high']:.2f}**  
-        - CRITICAL: p ≥ **{th['high']:.2f}**
-        """
-    )
-
-    st.caption(
-        "Note: The on-screen score is a percentile (rank) relative to the internal cohort. "
-        "The tiers above use the calibrated probability and are frozen from the internal data to avoid leakage."
-    )
-    # Risk contributors
+    # ─────────────────────────────────────────────────────────────────────────────
+    # PRIMARY RISK CONTRIBUTORS
+    # ─────────────────────────────────────────────────────────────────────────────
     inp_dict = {
         "age": age,
         "egfr": egfr,
@@ -516,18 +490,53 @@ with st.expander("Details (research-only): model probability & thresholds"):
         "hgb_min": hgb_min,
         "glucose_min": glucose_min
     }
-    
+
     factors = get_risk_factors(inp_dict)
-    
+
     if factors:
         st.markdown('<div class="contributors-box">', unsafe_allow_html=True)
         st.markdown('<div class="contributors-title">PRIMARY RISK CONTRIBUTORS</div>', unsafe_allow_html=True)
-        
         for factor in factors:
             st.markdown(f'<div class="contributor-item">{factor}</div>', unsafe_allow_html=True)
-        
         st.markdown('</div>', unsafe_allow_html=True)
 
+    # ─────────────────────────────────────────────────────────────────────────────
+    # DETAILS (research-only): model probability & thresholds
+    # ─────────────────────────────────────────────────────────────────────────────
+    with st.expander("Details (research-only): how this score is computed"):
+        prob_pct = float(prob * 100.0)
+        cat_prob = categorize_by_probability(prob)
+
+        st.write(
+            "**Display score (0–100)** represents the percentile rank of this patient’s "
+            "**calibrated mortality probability** compared to all patients in the internal (Tongji) reference cohort. "
+            "For example, a score of 80 means this patient’s predicted risk is higher than 80% of others."
+        )
+
+        # Compact metrics layout
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.metric("Calibrated probability", f"{prob_pct:.1f}%")
+        with c2:
+            st.metric("Percentile score", f"{risk_level:.0f}")
+        with c3:
+            st.metric("Probability tier", cat_prob)
+
+        st.markdown("**Frozen probability thresholds (defined on internal cohort):**")
+        th = PROB_THRESHOLDS
+        st.markdown(
+            f"- **LOW:** p < **{th['low']:.2f}**  \n"
+            f"- **MEDIUM:** **{th['low']:.2f} ≤ p < {th['medium']:.2f}**  \n"
+            f"- **ELEVATED:** **{th['medium']:.2f} ≤ p < {th['high']:.2f}**  \n"
+            f"- **CRITICAL:** p ≥ **{th['high']:.2f}**"
+        )
+
+        st.caption(
+            "Note: The displayed 0–100 score is a percentile transformation for intuitive understanding. "
+            "The thresholds above correspond to calibrated probability cut-offs "
+            "(p < 0.15, 0.15–0.35, 0.35–0.60, ≥0.60), "
+            "frozen on the internal Tongji cohort to maintain validation integrity."
+        )
 # ═══════════════════════════════════════════════════════════════════════════════
 # DISCLAIMER
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -586,5 +595,6 @@ with st.sidebar:
     
     © 2025 Z. Zampawala et al. All rights reserved.
     """)
+
 
 
