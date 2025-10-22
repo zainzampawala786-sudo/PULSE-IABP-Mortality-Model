@@ -226,12 +226,15 @@ features = bundle["model_info"]["features"]
 # HELPER FUNCTIONS
 # ═══════════════════════════════════════════════════════════════════════════════
 
+# Frozen probability thresholds (set on internal cohort)
+PROB_THRESHOLDS = {"low": 0.15, "medium": 0.35, "high": 0.60}
+
 def calculate_risk_level(prob, ref):
-    """Convert probability to percentile score (0-100)"""
+    """Convert probability to percentile score (0-100) relative to internal reference distribution."""
     return (prob > ref).mean() * 100
 
 def get_risk_category(level):
-    """Get risk category and color"""
+    """Percentile-based category for display color."""
     if level < 25:
         return "LOW RISK", "#28a745"
     elif level < 50:
@@ -241,36 +244,38 @@ def get_risk_category(level):
     else:
         return "CRITICAL RISK", "#dc3545"
 
-def get_risk_factors(inp):
-    """Identify top 3 risk contributors"""
-    factors = []
-    
-    if inp["lactate"] > 4.0:
-        factors.append(f"🔴 Peak Lactate: {inp['lactate']:.1f} mmol/L (threshold >4.0)")
-    
-    if inp["age"] > 70:
-        factors.append(f"🔴 Age: {inp['age']:.0f} years (threshold >70)")
-    
-    if inp["egfr"] < 45:
-        factors.append(f"🔴 eGFR: {inp['egfr']:.0f} mL/min/1.73m² (threshold <45)")
-    
-    if inp["cpr"]:
-        factors.append("🔴 Cardiopulmonary Resuscitation: Performed")
-    
-    if inp["crrt"]:
-        factors.append("🔴 Continuous Renal Replacement: Required")
-    
-    if inp["vent"]:
-        factors.append("🔴 Invasive Mechanical Ventilation: Required")
-    
-    if inp["hgb_min"] < 90:
-        factors.append(f"🔴 Minimum Hemoglobin: {inp['hgb_min']} g/L (threshold <90)")
-    
-    if inp["glucose_min"] < 5.5:
-        factors.append(f"🔴 Minimum Glucose: {inp['glucose_min']:.1f} mmol/L (threshold <5.5)")
-    
-    return factors[:3]
+def categorize_by_probability(p, thr=PROB_THRESHOLDS):
+    """Category by calibrated probability (used only in the details expander)."""
+    if p < thr["low"]:
+        return "LOW RISK"
+    elif p < thr["medium"]:
+        return "MEDIUM RISK"
+    elif p < thr["high"]:
+        return "ELEVATED RISK"
+    else:
+        return "CRITICAL RISK"
 
+def get_risk_factors(inp):
+    """Identify top 3 risk contributors (simple rules display only)."""
+    factors = []
+    if inp["lactate"] > 4.0:
+        factors.append(f" Peak Lactate: {inp['lactate']:.1f} mmol/L (threshold >4.0)")
+    if inp["age"] > 70:
+        factors.append(f" Age: {inp['age']:.0f} years (threshold >70)")
+    if inp["egfr"] < 45:
+        factors.append(f" eGFR: {inp['egfr']:.0f} mL/min/1.73m² (threshold <45)")
+    if inp["cpr"]:
+        factors.append(" Cardiopulmonary Resuscitation: Performed")
+    if inp["crrt"]:
+        factors.append(" Continuous Renal Replacement: Required")
+    if inp["vent"]:
+        factors.append(" Invasive Mechanical Ventilation: Required")
+    if inp["hgb_min"] < 90:
+        factors.append(f" Minimum Hemoglobin: {inp['hgb_min']} g/L (threshold <90)")
+    if inp["glucose_min"] < 5.5:
+        factors.append(f" Minimum Glucose: {inp['glucose_min']:.1f} mmol/L (threshold <5.5)")
+    return factors[:3]
+    
 # ═══════════════════════════════════════════════════════════════════════════════
 # HEADER
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -457,7 +462,35 @@ if calc_btn:
         Patient's risk is higher than <strong>{risk_level:.0f}%</strong> of comparable AMI patients requiring intra-aortic balloon pump support.
     </div>
     """, unsafe_allow_html=True)
-    
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DETAILS (research-only): calibrated probability & frozen thresholds
+# ─────────────────────────────────────────────────────────────────────────────
+with st.expander("Details (research-only): model probability & thresholds"):
+    prob_pct = float(prob * 100.0)
+    cat_prob = categorize_by_probability(prob)
+
+    st.markdown(
+        f"- **Calibrated probability**: **{prob_pct:.1f}%**  \n"
+        f"- **Percentile score (0–100)**: **{risk_level:.0f}**  \n"
+        f"- **Probability-based tier** (frozen on internal): **{cat_prob}**"
+    )
+
+    st.markdown("**Probability thresholds (fixed from internal cohort):**")
+    th = PROB_THRESHOLDS
+    st.markdown(
+        f"""
+        - LOW: p < **{th['low']:.2f}**  
+        - MEDIUM: **{th['low']:.2f} ≤ p < {th['medium']:.2f}**  
+        - ELEVATED: **{th['medium']:.2f} ≤ p < {th['high']:.2f}**  
+        - CRITICAL: p ≥ **{th['high']:.2f}**
+        """
+    )
+
+    st.caption(
+        "Note: The on-screen score is a percentile (rank) relative to the internal cohort. "
+        "The tiers above use the calibrated probability and are frozen from the internal data to avoid leakage."
+    )
     # Risk contributors
     inp_dict = {
         "age": age,
@@ -534,9 +567,9 @@ with st.sidebar:
     st.markdown("""
     Zampawala Z, et al. (2025). PULSE-IABP: Machine Learning Risk Calculator 
     for One-Year Mortality in AMI Patients with IABP Support. 
-    [Journal Name]. [In Press].
     
     DOI: [To be assigned]
     
     © 2025 Z. Zampawala et al. All rights reserved.
     """)
+
