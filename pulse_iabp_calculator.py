@@ -200,9 +200,6 @@ st.markdown("""
             font-size: 0.9rem;
         }
     }
-
-</style>
-""", unsafe_allow_html=True)
 </style>
 """, unsafe_allow_html=True)
 
@@ -229,15 +226,15 @@ features = bundle["model_info"]["features"]
 # HELPER FUNCTIONS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# (NEW) Frozen probability thresholds defined on internal cohort
+# Frozen probability thresholds defined on internal cohort
 PROB_THRESHOLDS = {"low": 0.15, "medium": 0.35, "high": 0.60}
 
 def calculate_risk_level(prob, ref):
-    """Convert probability to percentile score (0-100)"""
+    """Convert probability to percentile score (0-100)."""
     return (prob > ref).mean() * 100
 
 def get_risk_category(level):
-    """Get risk category and color"""
+    """Get risk category and color for the 0–100 display score."""
     if level < 25:
         return "LOW RISK", "#28a745"
     elif level < 50:
@@ -247,7 +244,7 @@ def get_risk_category(level):
     else:
         return "CRITICAL RISK", "#dc3545"
 
-# (NEW) Category by calibrated probability (for details box only)
+# Category by calibrated probability (for details box only)
 def categorize_by_probability(p, thr=PROB_THRESHOLDS):
     if p < thr["low"]:
         return "LOW RISK"
@@ -259,33 +256,24 @@ def categorize_by_probability(p, thr=PROB_THRESHOLDS):
         return "CRITICAL RISK"
 
 def get_risk_factors(inp):
-    """Identify top 3 risk contributors"""
+    """Identify top 3 risk contributors (rule-based display only)."""
     factors = []
-    
     if inp["lactate"] > 4.0:
-        factors.append(f" Peak Lactate: {inp['lactate']:.1f} mmol/L (threshold >4.0)")
-    
+        factors.append(f"🔴 Peak Lactate: {inp['lactate']:.1f} mmol/L (threshold >4.0)")
     if inp["age"] > 70:
-        factors.append(f" Age: {inp['age']:.0f} years (threshold >70)")
-    
+        factors.append(f"🔴 Age: {inp['age']:.0f} years (threshold >70)")
     if inp["egfr"] < 45:
-        factors.append(f" eGFR: {inp['egfr']:.0f} mL/min/1.73m² (threshold <45)")
-    
+        factors.append(f"🔴 eGFR: {inp['egfr']:.0f} mL/min/1.73m² (threshold <45)")
     if inp["cpr"]:
-        factors.append(" Cardiopulmonary Resuscitation: Performed")
-    
+        factors.append("🔴 Cardiopulmonary Resuscitation: Performed")
     if inp["crrt"]:
-        factors.append(" Continuous Renal Replacement: Required")
-    
+        factors.append("🔴 Continuous Renal Replacement: Required")
     if inp["vent"]:
-        factors.append(" Invasive Mechanical Ventilation: Required")
-    
+        factors.append("🔴 Invasive Mechanical Ventilation: Required")
     if inp["hgb_min"] < 90:
-        factors.append(f" Minimum Hemoglobin: {inp['hgb_min']} g/L (threshold <90)")
-    
+        factors.append(f"🔴 Minimum Hemoglobin: {inp['hgb_min']} g/L (threshold <90)")
     if inp["glucose_min"] < 5.5:
-        factors.append(f" Minimum Glucose: {inp['glucose_min']:.1f} mmol/L (threshold <5.5)")
-    
+        factors.append(f"🔴 Minimum Glucose: {inp['glucose_min']:.1f} mmol/L (threshold <5.5)")
     return factors[:3]
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -440,40 +428,51 @@ if calc_btn:
     category, color = get_risk_category(risk_level)
     
     # Display results
-    st.markdown(f"""
-    <div class="result-container">
-        <div class="result-title">ONE-YEAR MORTALITY RISK ASSESSMENT</div>
-        <div class="risk-score">RISK SCORE: {risk_level:.0f}</div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Progress bar
-    st.markdown(f"""
-    <div style="margin: 2rem 0;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem; color: #6c757d;">
-            <span>0</span>
-            <span>25</span>
-            <span>50</span>
-            <span>75</span>
-            <span>100</span>
+    st.markdown(
+        f"""
+        <div class="result-container">
+            <div class="result-title">ONE-YEAR MORTALITY RISK ASSESSMENT</div>
+            <div class="risk-score">RISK SCORE: {risk_level:.0f}</div>
         </div>
-        <div style="width: 100%; height: 40px; background-color: #e9ecef; border-radius: 20px; overflow: hidden; position: relative;">
-            <div style="width: {risk_level}%; height: 100%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); transition: width 0.5s ease;"></div>
-            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; font-size: 0.8rem; font-weight: 600; color: #495057;">
-                <span>LOW (0-24)</span>
-                <span>MEDIUM (25-49)</span>
-                <span>ELEVATED (50-74)</span>
-                <span>CRITICAL (75-100)</span>
+        """,
+        unsafe_allow_html=True,
+    )
+    
+    # Improved color bar (safe f-string)
+    st.markdown(
+        f"""
+        <div style="margin: 2rem 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem; color: #6c757d;">
+                <span>0</span>
+                <span>25</span>
+                <span>50</span>
+                <span>75</span>
+                <span>100</span>
+            </div>
+
+            <div style="width: 100%; height: 44px; background-color: #e9ecef; border-radius: 22px; overflow: hidden; position: relative; border: 1px solid #dee2e6;">
+                <div style="width: {risk_level:.0f}%; height: 100%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); transition: width 0.4s ease;"></div>
+
+                <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; font-size: 0.85rem; font-weight: 600; color: #495057;">
+                    <span>LOW (0–24)</span>
+                    <span>MEDIUM (25–49)</span>
+                    <span>ELEVATED (50–74)</span>
+                    <span>CRITICAL (75–100)</span>
+                </div>
             </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True,
+    )
     
-    st.markdown(f"""
-    <div style="text-align: center; font-size: 1.1rem; color: #495057; margin: 1.5rem 0;">
-        Patient’s estimated one-year mortality risk is higher than <strong>{risk_level:.0f}%</strong> of patients with AMI treated with IABP support.
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <div style="text-align: center; font-size: 1.1rem; color: #495057; margin: 1.5rem 0;">
+            Patient's risk is higher than <strong>{risk_level:.0f}%</strong> of comparable AMI patients requiring intra-aortic balloon pump support.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     
     # Risk contributors
     inp_dict = {
@@ -486,29 +485,25 @@ if calc_btn:
         "hgb_min": hgb_min,
         "glucose_min": glucose_min
     }
-    
     factors = get_risk_factors(inp_dict)
-    
     if factors:
         st.markdown('<div class="contributors-box">', unsafe_allow_html=True)
         st.markdown('<div class="contributors-title">PRIMARY RISK CONTRIBUTORS</div>', unsafe_allow_html=True)
-        
         for factor in factors:
             st.markdown(f'<div class="contributor-item">{factor}</div>', unsafe_allow_html=True)
-        
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ─────────────────────────────────────────────────────────────────────────────
-    # DETAILS (research-only): model probability & thresholds  (appears after Calc)
+    # Scoring and calibration details (research only)
     # ─────────────────────────────────────────────────────────────────────────────
-    with st.expander("Model derivation and scoring methodology (research only)"):
+    with st.expander("Scoring and calibration details (research only)"):
         prob_pct = float(prob * 100.0)
         cat_prob = categorize_by_probability(prob)
 
         st.write(
-    "**Display score (0–100)** represents the percentile rank of this patient’s "
-    "**calibrated mortality probability** relative to the internal (Tongji Hospital) reference cohort. "
-    "For example, a score of 80 indicates a higher predicted risk than 80% of comparable AMI patients requiring IABP support."
+            "**Display score (0–100)** represents the percentile rank of this patient’s "
+            "**calibrated mortality probability** relative to the internal (Tongji) reference cohort. "
+            "For example, a score of 80 indicates a higher predicted risk than 80% of comparable AMI patients requiring IABP support."
         )
 
         c1, c2, c3 = st.columns(3)
@@ -529,8 +524,8 @@ if calc_btn:
         )
 
         st.caption(
-    "The on-screen 0–100 score is a percentile rank for intuitive interpretation. "
-    "Probability thresholds are based on calibrated outputs and fixed from the internal cohort."
+            "The 0–100 score is a percentile rank for intuitive interpretation. "
+            "Probability thresholds are based on calibrated outputs and fixed from the internal (Tongji) cohort."
         )
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -540,7 +535,7 @@ if calc_btn:
 st.markdown("""
 <div class="disclaimer-box">
     <div class="disclaimer-text">
-        <strong>️ DISCLAIMER:</strong> This calculator is for RESEARCH and EDUCATIONAL purposes only. NOT validated for clinical decision-making.
+        <strong>⚠️ DISCLAIMER:</strong> This calculator is for RESEARCH and EDUCATIONAL purposes only. NOT validated for clinical decision-making.
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -590,11 +585,5 @@ with st.sidebar:
     
     DOI: [To be assigned]
     
-     2025 Z. Zampawala et al. All rights reserved.
+    © 2025 Z. Zampawala et al. All rights reserved.
     """)
-
-
-
-
-
-
