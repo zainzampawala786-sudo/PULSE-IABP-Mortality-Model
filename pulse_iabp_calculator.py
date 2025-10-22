@@ -498,7 +498,7 @@ if calc_btn:
     # ─────────────────────────────────────────────────────────────────────────────
     # DETAILS (research-only): model probability & thresholds  (appears after Calc)
     # ─────────────────────────────────────────────────────────────────────────────
-    with st.expander("Details (research-only): how this score is computed"):
+    with st.expander("Model derivation and scoring methodology (research only)"):
         prob_pct = float(prob * 100.0)
         cat_prob = categorize_by_probability(prob)
 
@@ -589,3 +589,4 @@ with st.sidebar:
     
      2025 Z. Zampawala et al. All rights reserved.
     """)
+
