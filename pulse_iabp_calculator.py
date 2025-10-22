@@ -201,28 +201,6 @@ st.markdown("""
         }
     }
 
-    /* Make the Streamlit expander more visible */
-div.streamlit-expanderHeader {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    color: white !important;
-    font-weight: 500 !important;
-    border-radius: 8px !important;
-    padding: 0.6rem 1rem !important;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-}
-
-/* Change icon and hover effect */
-div.streamlit-expanderHeader:hover {
-    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%) !important;
-    cursor: pointer;
-}
-
-/* Optional: slightly enlarge the dropdown arrow */
-svg.streamlit-expanderHeaderChevron {
-    width: 1.3em !important;
-    height: 1.3em !important;
-    fill: #fff !important;
-}
 </style>
 """, unsafe_allow_html=True)
 </style>
@@ -614,6 +592,7 @@ with st.sidebar:
     
      2025 Z. Zampawala et al. All rights reserved.
     """)
+
 
 
 
