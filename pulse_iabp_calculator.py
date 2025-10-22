@@ -468,7 +468,7 @@ if calc_btn:
     
     st.markdown(f"""
     <div style="text-align: center; font-size: 1.1rem; color: #495057; margin: 1.5rem 0;">
-        Patient's risk is higher than <strong>{risk_level:.0f}%</strong> of comparable AMI patients requiring intra-aortic balloon pump support.
+        Patient’s estimated one-year mortality risk is higher than <strong>{risk_level:.0f}%</strong> of patients with AMI treated with IABP support.
     </div>
     """, unsafe_allow_html=True)
     
@@ -589,4 +589,5 @@ with st.sidebar:
     
      2025 Z. Zampawala et al. All rights reserved.
     """)
+
 
