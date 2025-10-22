@@ -87,7 +87,7 @@ st.markdown("""
     
     .risk-score {
         font-size: 3.5rem;
-        font-weight: 600;
+        font-weight: 800;
         margin: 1rem 0;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     }
@@ -614,6 +614,7 @@ with st.sidebar:
     
      2025 Z. Zampawala et al. All rights reserved.
     """)
+
 
 
 
