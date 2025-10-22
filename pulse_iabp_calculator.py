@@ -221,23 +221,20 @@ model = bundle["models"]["calibrated_svm"]
 scaler = bundle["models"]["scaler"]
 ref_risks = bundle["predictions"]["all_internal_calibrated"]
 features = bundle["model_info"]["features"]
-# Initialize variables to avoid NameError before calculation
-prob = None
-risk_level = None
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # HELPER FUNCTIONS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Frozen probability thresholds (set on internal cohort)
+# (NEW) Frozen probability thresholds defined on internal cohort
 PROB_THRESHOLDS = {"low": 0.15, "medium": 0.35, "high": 0.60}
 
 def calculate_risk_level(prob, ref):
-    """Convert probability to percentile score (0-100) relative to internal reference distribution."""
+    """Convert probability to percentile score (0-100)"""
     return (prob > ref).mean() * 100
 
 def get_risk_category(level):
-    """Percentile-based category for display color."""
+    """Get risk category and color"""
     if level < 25:
         return "LOW RISK", "#28a745"
     elif level < 50:
@@ -247,8 +244,8 @@ def get_risk_category(level):
     else:
         return "CRITICAL RISK", "#dc3545"
 
+# (NEW) Category by calibrated probability (for details box only)
 def categorize_by_probability(p, thr=PROB_THRESHOLDS):
-    """Category by calibrated probability (used only in the details expander)."""
     if p < thr["low"]:
         return "LOW RISK"
     elif p < thr["medium"]:
@@ -259,26 +256,35 @@ def categorize_by_probability(p, thr=PROB_THRESHOLDS):
         return "CRITICAL RISK"
 
 def get_risk_factors(inp):
-    """Identify top 3 risk contributors (simple rules display only)."""
+    """Identify top 3 risk contributors"""
     factors = []
+    
     if inp["lactate"] > 4.0:
         factors.append(f" Peak Lactate: {inp['lactate']:.1f} mmol/L (threshold >4.0)")
+    
     if inp["age"] > 70:
         factors.append(f" Age: {inp['age']:.0f} years (threshold >70)")
+    
     if inp["egfr"] < 45:
         factors.append(f" eGFR: {inp['egfr']:.0f} mL/min/1.73m² (threshold <45)")
+    
     if inp["cpr"]:
         factors.append(" Cardiopulmonary Resuscitation: Performed")
+    
     if inp["crrt"]:
         factors.append(" Continuous Renal Replacement: Required")
+    
     if inp["vent"]:
         factors.append(" Invasive Mechanical Ventilation: Required")
+    
     if inp["hgb_min"] < 90:
         factors.append(f" Minimum Hemoglobin: {inp['hgb_min']} g/L (threshold <90)")
+    
     if inp["glucose_min"] < 5.5:
         factors.append(f" Minimum Glucose: {inp['glucose_min']:.1f} mmol/L (threshold <5.5)")
-    return factors[:3]
     
+    return factors[:3]
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # HEADER
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -465,21 +471,8 @@ if calc_btn:
         Patient's risk is higher than <strong>{risk_level:.0f}%</strong> of comparable AMI patients requiring intra-aortic balloon pump support.
     </div>
     """, unsafe_allow_html=True)
-    # === Detailed Explanation (only shows after calculation) ===
-with st.expander("How this score is computed (details)", expanded=False):
-    if prob is None:
-        st.info("Enter inputs and click **CALCULATE RISK SCORE** to see details.")
-    else:
-        prob_pct = float(prob * 100.0)
-        prob_cat = categorize_by_probability(prob)  # Uses frozen thresholds
-        st.markdown(f"**Calibrated probability:** {prob_pct:.1f}%")
-        st.markdown(f"**Probability category (frozen):** {prob_cat}")
-        st.markdown(f"**Display score (0–100):** percentile relative to internal cohort.")
-        st.caption("Note: The 0–100 score is a percentile rank (not an absolute probability).")
-
-    # ─────────────────────────────────────────────────────────────────────────────
-    # PRIMARY RISK CONTRIBUTORS
-    # ─────────────────────────────────────────────────────────────────────────────
+    
+    # Risk contributors
     inp_dict = {
         "age": age,
         "egfr": egfr,
@@ -490,30 +483,31 @@ with st.expander("How this score is computed (details)", expanded=False):
         "hgb_min": hgb_min,
         "glucose_min": glucose_min
     }
-
+    
     factors = get_risk_factors(inp_dict)
-
+    
     if factors:
         st.markdown('<div class="contributors-box">', unsafe_allow_html=True)
         st.markdown('<div class="contributors-title">PRIMARY RISK CONTRIBUTORS</div>', unsafe_allow_html=True)
+        
         for factor in factors:
             st.markdown(f'<div class="contributor-item">{factor}</div>', unsafe_allow_html=True)
+        
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ─────────────────────────────────────────────────────────────────────────────
-    # DETAILS (research-only): model probability & thresholds
+    # DETAILS (research-only): model probability & thresholds  (appears after Calc)
     # ─────────────────────────────────────────────────────────────────────────────
     with st.expander("Details (research-only): how this score is computed"):
         prob_pct = float(prob * 100.0)
         cat_prob = categorize_by_probability(prob)
 
         st.write(
-            "**Display score (0–100)** represents the percentile rank of this patient’s "
-            "**calibrated mortality probability** compared to all patients in the internal (Tongji) reference cohort. "
-            "For example, a score of 80 means this patient’s predicted risk is higher than 80% of others."
+            "**Display score (0–100)** is the percentile rank of this patient’s "
+            "**calibrated mortality probability** vs. the internal (Tongji) reference cohort. "
+            "E.g., score 80 ⇒ higher risk than 80% of comparable patients."
         )
 
-        # Compact metrics layout
         c1, c2, c3 = st.columns(3)
         with c1:
             st.metric("Calibrated probability", f"{prob_pct:.1f}%")
@@ -532,11 +526,10 @@ with st.expander("How this score is computed (details)", expanded=False):
         )
 
         st.caption(
-            "Note: The displayed 0–100 score is a percentile transformation for intuitive understanding. "
-            "The thresholds above correspond to calibrated probability cut-offs "
-            "(p < 0.15, 0.15–0.35, 0.35–0.60, ≥0.60), "
-            "frozen on the internal Tongji cohort to maintain validation integrity."
+            "The on-screen 0–100 score is a percentile (rank) for user-friendly display. "
+            "The thresholds above use the calibrated probability and are frozen from the internal data."
         )
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # DISCLAIMER
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -544,7 +537,7 @@ with st.expander("How this score is computed (details)", expanded=False):
 st.markdown("""
 <div class="disclaimer-box">
     <div class="disclaimer-text">
-        <strong>⚠️ DISCLAIMER:</strong> This calculator is for RESEARCH and EDUCATIONAL purposes only. NOT validated for clinical decision-making.
+        <strong>️ DISCLAIMER:</strong> This calculator is for RESEARCH and EDUCATIONAL purposes only. NOT validated for clinical decision-making.
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -590,11 +583,9 @@ with st.sidebar:
     st.markdown("""
     Zampawala Z, et al. (2025). PULSE-IABP: Machine Learning Risk Calculator 
     for One-Year Mortality in AMI Patients with IABP Support. 
+    [Journal Name]. [In Press].
     
     DOI: [To be assigned]
     
-    © 2025 Z. Zampawala et al. All rights reserved.
+     2025 Z. Zampawala et al. All rights reserved.
     """)
-
-
-
