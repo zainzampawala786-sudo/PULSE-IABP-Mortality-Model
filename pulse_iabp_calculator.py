@@ -3,6 +3,7 @@
 # Prediction Using Long-term Survival Estimation in AMI Patients Undergoing IABP Support
 # ═══════════════════════════════════════════════════════════════════════════════
 # Version: 1.0.0
+# Updated: 2025-11-11 13:26:34 UTC
 # Developed by: Z. Zampawala et al. (2025)
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -219,69 +220,51 @@ def load_model():
 bundle = load_model()
 model = bundle["models"]["calibrated_svm"]
 scaler = bundle["models"]["scaler"]
-ref_risks = bundle["predictions"]["all_internal_calibrated"]
 features = bundle["model_info"]["features"]
+thresholds = bundle["risk_thresholds"]
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # HELPER FUNCTIONS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# (NEW) Frozen probability thresholds defined on internal cohort
-PROB_THRESHOLDS = {"low": 0.15, "medium": 0.35, "high": 0.60}
-
-def calculate_risk_level(prob, ref):
-    """Convert probability to percentile score (0-100)"""
-    return (prob > ref).mean() * 100
-
-def get_risk_category(level):
-    """Get risk category and color"""
-    if level < 25:
-        return "LOW RISK", "#28a745"
-    elif level < 50:
-        return "MEDIUM RISK", "#ffc107"
-    elif level < 75:
-        return "ELEVATED RISK", "#fd7e14"
+def get_risk_category(prob):
+    """Get risk category based on Step 17A thresholds (0.15, 0.45, 0.70)"""
+    if prob < thresholds['low']:
+        return "LOW RISK", "#28a745", "🟢"
+    elif prob < thresholds['medium']:
+        return "MEDIUM RISK", "#ffc107", "🟡"
+    elif prob < thresholds['high']:
+        return "HIGH RISK", "#fd7e14", "🟠"
     else:
-        return "CRITICAL RISK", "#dc3545"
-
-# (NEW) Category by calibrated probability (for details box only)
-def categorize_by_probability(p, thr=PROB_THRESHOLDS):
-    if p < thr["low"]:
-        return "LOW RISK"
-    elif p < thr["medium"]:
-        return "MEDIUM RISK"
-    elif p < thr["high"]:
-        return "ELEVATED RISK"
-    else:
-        return "CRITICAL RISK"
+        return "VERY HIGH RISK", "#dc3545", "🔴"
 
 def get_risk_factors(inp):
     """Identify top 3 risk contributors"""
     factors = []
     
     if inp["lactate"] > 4.0:
-        factors.append(f" Peak Lactate: {inp['lactate']:.1f} mmol/L (threshold >4.0)")
+        factors.append(f"⚠ Peak Lactate: {inp['lactate']:.1f} mmol/L (threshold >4.0)")
     
     if inp["age"] > 70:
-        factors.append(f" Age: {inp['age']:.0f} years (threshold >70)")
+        factors.append(f"⚠ Age: {inp['age']:.0f} years (threshold >70)")
     
     if inp["egfr"] < 45:
-        factors.append(f" eGFR: {inp['egfr']:.0f} mL/min/1.73m² (threshold <45)")
+        factors.append(f"⚠ eGFR: {inp['egfr']:.0f} mL/min/1.73m² (threshold <45)")
     
     if inp["cpr"]:
-        factors.append(" Cardiopulmonary Resuscitation: Performed")
+        factors.append("⚠ Cardiopulmonary Resuscitation: Performed")
     
     if inp["crrt"]:
-        factors.append(" Continuous Renal Replacement: Required")
+        factors.append("⚠ Continuous Renal Replacement: Required")
     
     if inp["vent"]:
-        factors.append(" Invasive Mechanical Ventilation: Required")
+        factors.append("⚠ Invasive Mechanical Ventilation: Required")
     
     if inp["hgb_min"] < 90:
-        factors.append(f" Minimum Hemoglobin: {inp['hgb_min']} g/L (threshold <90)")
+        factors.append(f"⚠ Minimum Hemoglobin: {inp['hgb_min']} g/L (threshold <90)")
     
     if inp["glucose_min"] < 5.5:
-        factors.append(f" Minimum Glucose: {inp['glucose_min']:.1f} mmol/L (threshold <5.5)")
+        factors.append(f"⚠ Minimum Glucose: {inp['glucose_min']:.1f} mmol/L (threshold <5.5)")
     
     return factors[:3]
 
@@ -433,34 +416,39 @@ if calc_btn:
     X = np.array([[feat_map[f] for f in features]])
     X_scaled = scaler.transform(X)
     prob = model.predict_proba(X_scaled)[0, 1]
-    risk_level = calculate_risk_level(prob, ref_risks)
-    category, color = get_risk_category(risk_level)
+    
+    # Calculate risk score (probability × 100)
+    risk_score = prob * 100
+    
+    # Get category
+    category, color, emoji = get_risk_category(prob)
     
     # Display results
     st.markdown(f"""
     <div class="result-container">
         <div class="result-title">ONE-YEAR MORTALITY RISK ASSESSMENT</div>
-        <div class="risk-score">RISK SCORE: {risk_level:.0f}</div>
+        <div class="risk-score">{emoji} RISK SCORE: {risk_score:.1f}</div>
+        <div style="font-size: 1.5rem; margin-top: 1rem; font-weight: 700;">{category}</div>
     </div>
     """, unsafe_allow_html=True)
     
-    # Progress bar
+    # Progress bar with updated ranges (0-15, 15-45, 45-70, 70-100)
     st.markdown(f"""
     <div style="margin: 2rem 0;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem; color: #6c757d;">
             <span>0</span>
-            <span>25</span>
-            <span>50</span>
-            <span>75</span>
+            <span>15</span>
+            <span>45</span>
+            <span>70</span>
             <span>100</span>
         </div>
         <div style="width: 100%; height: 40px; background-color: #e9ecef; border-radius: 20px; overflow: hidden; position: relative;">
-            <div style="width: {risk_level}%; height: 100%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); transition: width 0.5s ease;"></div>
-            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; font-size: 0.8rem; font-weight: 600; color: #495057;">
-                <span>LOW (0-24)</span>
-                <span>MEDIUM (25-49)</span>
-                <span>ELEVATED (50-74)</span>
-                <span>CRITICAL (75-100)</span>
+            <div style="width: {risk_score}%; height: 100%; background: linear-gradient(90deg, #28a745 0%, #28a745 15%, #ffc107 15%, #ffc107 45%, #fd7e14 45%, #fd7e14 70%, #dc3545 70%, #dc3545 100%); transition: width 0.5s ease;"></div>
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: space-around; align-items: center; padding: 0 0.5rem; font-size: 0.75rem; font-weight: 600; color: #495057;">
+                <span style="flex: 15;">LOW<br/>0-15</span>
+                <span style="flex: 30;">MEDIUM<br/>15-45</span>
+                <span style="flex: 25;">HIGH<br/>45-70</span>
+                <span style="flex: 30;">VERY HIGH<br/>70-100</span>
             </div>
         </div>
     </div>
@@ -468,7 +456,7 @@ if calc_btn:
     
     st.markdown(f"""
     <div style="text-align: center; font-size: 1.1rem; color: #495057; margin: 1.5rem 0;">
-        Patient’s estimated one-year mortality risk is higher than <strong>{risk_level:.0f}%</strong> of patients with AMI treated with IABP support.
+        Patient's estimated one-year mortality risk is <strong>{risk_score:.1f}%</strong> ({category}).
     </div>
     """, unsafe_allow_html=True)
     
@@ -495,39 +483,34 @@ if calc_btn:
         
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ─────────────────────────────────────────────────────────────────────────────
-    # DETAILS (research-only): model probability & thresholds  (appears after Calc)
-    # ─────────────────────────────────────────────────────────────────────────────
-    with st.expander("Model derivation and scoring methodology (research only)"):
-        prob_pct = float(prob * 100.0)
-        cat_prob = categorize_by_probability(prob)
-
+    # Details expander
+    with st.expander("📊 Model Details & Interpretation"):
         st.write(
-    "**Display score (0–100)** represents the percentile rank of this patient’s "
-    "**calibrated mortality probability** relative to the internal (Tongji Hospital) reference cohort. "
-    "For example, a score of 80 indicates a higher predicted risk than 80% of comparable AMI patients requiring IABP support."
+            "**Risk Score Calculation:** The displayed score (0-100) represents the model's "
+            "calibrated probability of one-year mortality, scaled by 100. For example, a score of "
+            "23.5 indicates a 23.5% predicted probability of mortality within one year."
         )
-
-        c1, c2, c3 = st.columns(3)
+        
+        c1, c2 = st.columns(2)
         with c1:
-            st.metric("Calibrated probability", f"{prob_pct:.1f}%")
+            st.metric("Calibrated Probability", f"{prob:.3f}")
+            st.metric("Risk Score (0-100)", f"{risk_score:.1f}")
         with c2:
-            st.metric("Percentile score", f"{risk_level:.0f}")
-        with c3:
-            st.metric("Probability tier", cat_prob)
-
-        st.markdown("**Frozen probability thresholds (defined on internal cohort):**")
-        th = PROB_THRESHOLDS
+            st.metric("Risk Category", category)
+            st.metric("Category Indicator", emoji)
+        
+        st.markdown("**Risk Stratification Thresholds (Step 17A-D validated):**")
         st.markdown(
-            f"- **LOW:** p < **{th['low']:.2f}**  \n"
-            f"- **MEDIUM:** **{th['low']:.2f} ≤ p < {th['medium']:.2f}**  \n"
-            f"- **ELEVATED:** **{th['medium']:.2f} ≤ p < {th['high']:.2f}**  \n"
-            f"- **CRITICAL:** p ≥ **{th['high']:.2f}**"
+            f"- 🟢 **LOW:** < {thresholds['low']*100:.0f}% (Internal: 5.1% mortality, External: 14.5%)  \n"
+            f"- 🟡 **MEDIUM:** {thresholds['low']*100:.0f}-{thresholds['medium']*100:.0f}% (Internal: 22.3% mortality, External: 21.7%)  \n"
+            f"- 🟠 **HIGH:** {thresholds['medium']*100:.0f}-{thresholds['high']*100:.0f}% (Internal: 45.3% mortality, External: 50.0%)  \n"
+            f"- 🔴 **VERY HIGH:** ≥ {thresholds['high']*100:.0f}% (Internal: 91.1% mortality, External: 82.1%)"
         )
-
+        
         st.caption(
-    "The on-screen 0–100 score is a percentile rank for intuitive interpretation. "
-    "Probability thresholds are based on calibrated outputs and fixed from the internal cohort."
+            "Thresholds optimized using grid search (Step 17A) and validated through "
+            "Cochran-Armitage trend test (Step 17C, p<0.001) and risk ratio analysis (Step 17D). "
+            "Internal validation: n=476, External validation: n=354."
         )
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -537,7 +520,7 @@ if calc_btn:
 st.markdown("""
 <div class="disclaimer-box">
     <div class="disclaimer-text">
-        <strong>️ DISCLAIMER:</strong> This calculator is for RESEARCH and EDUCATIONAL purposes only. NOT validated for clinical decision-making.
+        <strong>⚠️ DISCLAIMER:</strong> This calculator is for RESEARCH and EDUCATIONAL purposes only. NOT validated for clinical decision-making.
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -548,7 +531,7 @@ st.markdown("""
 
 st.markdown("""
 <div class="footer-text">
-    IABP-PULSE Calculator v1.0.0 • Streamlit • Developed by Z. Zampawala et al. (2025)
+    PULSE-IABP Calculator v2.0.0 (Updated 2025-11-11 13:26:34 UTC) • Developed by Z. Zampawala et al. (2025)
 </div>
 """, unsafe_allow_html=True)
 
@@ -573,9 +556,18 @@ with st.sidebar:
     st.markdown("• Follow-up: 12 months")
     
     st.markdown("**PERFORMANCE METRICS:**")
-    st.markdown("• External AUC: 0.768 (95% CI: 0.72-0.82)")
-    st.markdown("• Brier Score: 0.186")
-    st.markdown("• Calibration Slope: 0.918 (SE: 0.08)")
+    if 'performance' in bundle and 'phase_b' in bundle['performance']:
+        perf = bundle['performance']['phase_b']['external_confirmatory']
+        st.markdown(f"• External AUC: {perf['auc']:.3f}")
+        st.markdown(f"• Brier Score: {perf['brier']:.3f}")
+        if 'calibration' in perf:
+            st.markdown(f"• Calibration Slope: {perf['calibration']['slope']:.3f}")
+    
+    st.markdown("**RISK STRATIFICATION (Steps 17A-D):**")
+    st.markdown("• Thresholds: 15%, 45%, 70%")
+    st.markdown("• Internal min separation: 17.3%")
+    st.markdown("• External min separation: 7.2%")
+    st.markdown("• Trend test: p < 0.001 (both cohorts)")
     
     st.markdown("---")
     
@@ -587,7 +579,5 @@ with st.sidebar:
     
     DOI: [To be assigned]
     
-     2025 Z. Zampawala et al. All rights reserved.
+    © 2025 Z. Zampawala et al. All rights reserved.
     """)
-
-
