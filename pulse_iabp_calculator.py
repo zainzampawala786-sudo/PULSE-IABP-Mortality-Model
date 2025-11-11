@@ -3,7 +3,7 @@
 # Prediction Using Long-term Survival Estimation in AMI Patients Undergoing IABP Support
 # ═══════════════════════════════════════════════════════════════════════════════
 # Version: 1.0.0
-# Updated: 2025-11-11 13:26:34 UTC
+# Updated: 2025-11-11 14:08:15 UTC 
 # Developed by: Z. Zampawala et al. (2025)
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -218,10 +218,10 @@ def load_model():
         st.stop()
 
 bundle = load_model()
-model = bundle["models"]["calibrated_svm"]
-scaler = bundle["models"]["scaler"]
+model = bundle["models"]["calibrated_svm"]  # ✅ Pipeline with built-in scaler
 features = bundle["model_info"]["features"]
 thresholds = bundle["risk_thresholds"]
+# ✅ REMOVED: scaler = bundle["models"]["scaler"]  # Don't need separate scaler!
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # HELPER FUNCTIONS
@@ -412,10 +412,11 @@ if calc_btn:
         else:
             feat_map[feature_name] = 0
     
-    # Create input array and predict
+    # Create input array (RAW - pipeline handles scaling)
     X = np.array([[feat_map[f] for f in features]])
-    X_scaled = scaler.transform(X)
-    prob = model.predict_proba(X_scaled)[0, 1]
+    
+    # ✅ FIXED: No manual scaling - model's pipeline does it
+    prob = model.predict_proba(X)[0, 1]
     
     # Calculate risk score (probability × 100)
     risk_score = prob * 100
@@ -531,7 +532,7 @@ st.markdown("""
 
 st.markdown("""
 <div class="footer-text">
-    PULSE-IABP Calculator v2.0.0 (Updated 2025-11-11 13:26:34 UTC) • Developed by Z. Zampawala et al. (2025)
+    PULSE-IABP Calculator v2.0.0 (Updated 2025-11-11 14:08:15 UTC) • Developed by Z. Zampawala et al. (2025)
 </div>
 """, unsafe_allow_html=True)
 
