@@ -34,16 +34,20 @@ Open browser: http://localhost:8501
 - Training: n=476 (internal cohort only)
 - Validation: n=354 (external cohort)
 - External AUC: 0.768
-- Display: Risk Level 0-100 (percentile-based)
-- TRIPOD Type: 3 (External validation)
+- Display: Risk Score 0-100 (probability-based)
 
 ---
 
+## Risk Stratification Thresholds
+- LOW: < 15% (Internal: 5.1% mortality)
+- MEDIUM: 15-45% (Internal: 22.3% mortality)
+- HIGH: 45-70% (Internal: 45.3% mortality)
+- VERY HIGH: ≥ 70% (Internal: 91.1% mortality)
+
 ## Features
 
-- Risk Level: 0-100 (percentile score)
-- Categories: LOW / MEDIUM / ELEVATED / CRITICAL
-- Top 3 risk factors displayed
+- Risk Score: 0-100 (probability × 100 = mortality risk)
+- Categories: LOW / MEDIUM / HIGH / VERY HIGH
 - Units included for all variables
 - Professional medical interface
 
@@ -53,4 +57,5 @@ Open browser: http://localhost:8501
 
 WARNING: For research and educational purposes only.
 NOT approved for clinical decision-making.
+
 
