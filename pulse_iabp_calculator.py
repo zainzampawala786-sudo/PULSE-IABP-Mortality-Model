@@ -238,36 +238,6 @@ def get_risk_category(prob):
     else:
         return "VERY HIGH RISK", "#dc3545", "🔴"
 
-def get_risk_factors(inp):
-    """Identify top 3 risk contributors"""
-    factors = []
-    
-    if inp["lactate"] > 4.0:
-        factors.append(f"⚠ Peak Lactate: {inp['lactate']:.1f} mmol/L (threshold >4.0)")
-    
-    if inp["age"] > 70:
-        factors.append(f"⚠ Age: {inp['age']:.0f} years (threshold >70)")
-    
-    if inp["egfr"] < 45:
-        factors.append(f"⚠ eGFR: {inp['egfr']:.0f} mL/min/1.73m² (threshold <45)")
-    
-    if inp["cpr"]:
-        factors.append("⚠ Cardiopulmonary Resuscitation: Performed")
-    
-    if inp["crrt"]:
-        factors.append("⚠ Continuous Renal Replacement: Required")
-    
-    if inp["vent"]:
-        factors.append("⚠ Invasive Mechanical Ventilation: Required")
-    
-    if inp["hgb_min"] < 90:
-        factors.append(f"⚠ Minimum Hemoglobin: {inp['hgb_min']} g/L (threshold <90)")
-    
-    if inp["glucose_min"] < 5.5:
-        factors.append(f"⚠ Minimum Glucose: {inp['glucose_min']:.1f} mmol/L (threshold <5.5)")
-    
-    return factors[:3]
-
 # ═══════════════════════════════════════════════════════════════════════════════
 # HEADER
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -415,7 +385,7 @@ if calc_btn:
     # Create input array (RAW - pipeline handles scaling)
     X = np.array([[feat_map[f] for f in features]])
     
-    # ✅ FIXED: No manual scaling - model's pipeline does it
+    # Scaling 
     prob = model.predict_proba(X)[0, 1]
     
     # Calculate risk score (probability × 100)
@@ -464,35 +434,12 @@ if calc_btn:
     </div>
     """, unsafe_allow_html=True)
     
-    # Risk contributors
-    inp_dict = {
-        "age": age,
-        "egfr": egfr,
-        "lactate": lactate_max,
-        "cpr": (cpr == "Yes"),
-        "crrt": (crrt == "Yes"),
-        "vent": (invasive_vent == "Yes"),
-        "hgb_min": hgb_min,
-        "glucose_min": glucose_min
-    }
-    
-    factors = get_risk_factors(inp_dict)
-    
-    if factors:
-        st.markdown('<div class="contributors-box">', unsafe_allow_html=True)
-        st.markdown('<div class="contributors-title">PRIMARY RISK CONTRIBUTORS</div>', unsafe_allow_html=True)
-        
-        for factor in factors:
-            st.markdown(f'<div class="contributor-item">{factor}</div>', unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
-
     # Details expander
     with st.expander("📊 Model Details & Interpretation"):
         st.write(
             "**Risk Score Calculation:** The displayed score (0-100) represents the model's "
             "calibrated probability of one-year mortality, scaled by 100. For example, a score of "
-            "23.5 indicates a 23.5% predicted probability of mortality within one year."
+            "50.0 indicates a 50.0% predicted probability of mortality within one year following IABP insertion."
         )
         
         c1, c2 = st.columns(2)
@@ -505,17 +452,12 @@ if calc_btn:
         
         st.markdown("**Risk Stratification Thresholds (Step 17A-D validated):**")
         st.markdown(
-            f"- 🟢 **LOW:** < {thresholds['low']*100:.0f}% (Internal: 5.1% mortality, External: 14.5%)  \n"
-            f"- 🟡 **MEDIUM:** {thresholds['low']*100:.0f}-{thresholds['medium']*100:.0f}% (Internal: 22.3% mortality, External: 21.7%)  \n"
-            f"- 🟠 **HIGH:** {thresholds['medium']*100:.0f}-{thresholds['high']*100:.0f}% (Internal: 45.3% mortality, External: 50.0%)  \n"
-            f"- 🔴 **VERY HIGH:** ≥ {thresholds['high']*100:.0f}% (Internal: 91.1% mortality, External: 82.1%)"
+            f"- 🟢 **LOW:** < {thresholds['low']*100:.0f}%  \n"
+            f"- 🟡 **MEDIUM:** {thresholds['low']*100:.0f}-{thresholds['medium']*100:.0f}%  \n"
+            f"- 🟠 **HIGH:** {thresholds['medium']*100:.0f}-{thresholds['high']*100:.0f}%  \n"
+            f"- 🔴 **VERY HIGH:** ≥ {thresholds['high']*100:.0f}%"
         )
         
-        st.caption(
-            "Thresholds optimized using grid search (Step 17A) and validated through "
-            "Cochran-Armitage trend test (Step 17C, p<0.001) and risk ratio analysis (Step 17D). "
-            "Internal validation: n=476, External validation: n=354."
-        )
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # DISCLAIMER
@@ -535,7 +477,7 @@ st.markdown("""
 
 st.markdown("""
 <div class="footer-text">
-    PULSE-IABP Calculator v2.0.0 (Updated 2025-11-11 14:08:15 UTC) • Developed by Z. Zampawala et al. (2025)
+    PULSE-IABP Calculator v1.0.0 • Developed by Z. Zampawala et al. (2025)
 </div>
 """, unsafe_allow_html=True)
 
@@ -581,6 +523,7 @@ with st.sidebar:
     
     © 2025 Z. Zampawala et al. All rights reserved.
     """)
+
 
 
 
