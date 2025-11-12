@@ -433,7 +433,7 @@ if calc_btn:
     </div>
     """, unsafe_allow_html=True)
     
-    # Progress bar with updated ranges (0-15, 15-45, 45-70, 70-100)
+    # Progress bar with ranges (0-15, 15-45, 45-70, 70-100)
     st.markdown(f"""
     <div style="margin: 2rem 0;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem; color: #6c757d;">
@@ -443,13 +443,33 @@ if calc_btn:
             <span>70</span>
             <span>100</span>
         </div>
-        <div style="width: 100%; height: 40px; background-color: #e9ecef; border-radius: 20px; overflow: hidden; position: relative;">
-            <div style="width: {risk_score}%; height: 100%; background: linear-gradient(90deg, #28a745 0%, #28a745 15%, #ffc107 15%, #ffc107 45%, #fd7e14 45%, #fd7e14 70%, #dc3545 70%, #dc3545 100%); transition: width 0.5s ease;"></div>
-            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: space-around; align-items: center; padding: 0 0.5rem; font-size: 0.75rem; font-weight: 600; color: #495057;">
-                <span style="flex: 15;">LOW<br/>0-15</span>
-                <span style="flex: 30;">MEDIUM<br/>15-45</span>
-                <span style="flex: 25;">HIGH<br/>45-70</span>
-                <span style="flex: 30;">VERY HIGH<br/>70-100</span>
+        <div style="width: 100%; height: 40px; background: linear-gradient(90deg, 
+            #28a745 0%, #28a745 15%, 
+            #ffc107 15%, #ffc107 45%, 
+            #fd7e14 45%, #fd7e14 70%, 
+            #dc3545 70%, #dc3545 100%); 
+            border-radius: 20px; position: relative; overflow: visible;">
+            
+            <!-- Marker dot at risk score position -->
+            <div style="position: absolute; 
+                left: {risk_score}%; 
+                top: 50%; 
+                transform: translate(-50%, -50%); 
+                width: 20px; 
+                height: 20px; 
+                background-color: white; 
+                border: 3px solid #2c3e50; 
+                border-radius: 50%; 
+                box-shadow: 0 0 10px rgba(0,0,0,0.5);
+                z-index: 10;">
+            </div>
+            
+            <!-- Labels -->
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; padding: 0 0.5rem;">
+                <span style="position: absolute; left: 7.5%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">LOW</span>
+                <span style="position: absolute; left: 30%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">MEDIUM</span>
+                <span style="position: absolute; left: 57.5%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">HIGH</span>
+                <span style="position: absolute; left: 85%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">VERY HIGH</span>
             </div>
         </div>
     </div>
@@ -546,9 +566,7 @@ with st.sidebar:
     st.markdown("**ALGORITHM SPECIFICATIONS:**")
     st.markdown("• Model: Support Vector Machine (RBF kernel)")
     st.markdown("• Calibration: Platt scaling (sigmoid)")
-    st.markdown("• Hyperparameters: C=0.1, γ=auto, class_weight=balanced")
     st.markdown("• Feature Selection: 16 clinical variables")
-    st.markdown("• Missing Data: Median imputation")
     
     st.markdown("**STUDY POPULATION:**")
     st.markdown("• Training Cohort: n=476 (Tongji Hospital, Wuhan, China)")
@@ -564,11 +582,9 @@ with st.sidebar:
         if 'calibration' in perf:
             st.markdown(f"• Calibration Slope: {perf['calibration']['slope']:.3f}")
     
-    st.markdown("**RISK STRATIFICATION (Steps 17A-D):**")
+    st.markdown("**RISK STRATIFICATION:**")
     st.markdown("• Thresholds: 15%, 45%, 70%")
-    st.markdown("• Internal min separation: 17.3%")
-    st.markdown("• External min separation: 7.2%")
-    st.markdown("• Trend test: p < 0.001 (both cohorts)")
+    st.markdown("• Trend test: p < 0.001")
     
     st.markdown("---")
     
@@ -582,3 +598,4 @@ with st.sidebar:
     
     © 2025 Z. Zampawala et al. All rights reserved.
     """)
+
