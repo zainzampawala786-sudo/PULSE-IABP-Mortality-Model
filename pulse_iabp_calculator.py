@@ -435,7 +435,7 @@ if calc_btn:
     
     # Progress bar with ranges (0-15, 15-45, 45-70, 70-100)
     st.markdown(f"""
-    <div style="margin: 2rem 0;">
+    <div style="margin: 2rem 0; padding: 1rem 0;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem; color: #6c757d;">
             <span>0</span>
             <span>15</span>
@@ -443,33 +443,35 @@ if calc_btn:
             <span>70</span>
             <span>100</span>
         </div>
-        <div style="width: 100%; height: 40px; background: linear-gradient(90deg, 
-            #28a745 0%, #28a745 15%, 
-            #ffc107 15%, #ffc107 45%, 
-            #fd7e14 45%, #fd7e14 70%, 
-            #dc3545 70%, #dc3545 100%); 
-            border-radius: 20px; position: relative; overflow: visible;">
+        <div style="position: relative; padding: 10px 0;">
+            <div style="width: 100%; height: 40px; background: linear-gradient(90deg, 
+                #28a745 0%, #28a745 15%, 
+                #ffc107 15%, #ffc107 45%, 
+                #fd7e14 45%, #fd7e14 70%, 
+                #dc3545 70%, #dc3545 100%); 
+                border-radius: 20px; position: relative;">
+                
+                <!-- Labels inside bar -->
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; padding: 0 0.5rem;">
+                    <span style="position: absolute; left: 7.5%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">LOW</span>
+                    <span style="position: absolute; left: 30%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">MEDIUM</span>
+                    <span style="position: absolute; left: 57.5%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">HIGH</span>
+                    <span style="position: absolute; left: 85%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">V.HIGH</span>
+                </div>
+            </div>
             
-            <!-- Marker dot at risk score position -->
+            <!-- Marker dot OUTSIDE bar container -->
             <div style="position: absolute; 
                 left: {risk_score}%; 
                 top: 50%; 
                 transform: translate(-50%, -50%); 
-                width: 20px; 
-                height: 20px; 
+                width: 24px; 
+                height: 24px; 
                 background-color: white; 
-                border: 3px solid #2c3e50; 
+                border: 4px solid #2c3e50; 
                 border-radius: 50%; 
-                box-shadow: 0 0 10px rgba(0,0,0,0.5);
-                z-index: 10;">
-            </div>
-            
-            <!-- Labels -->
-            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; padding: 0 0.5rem;">
-                <span style="position: absolute; left: 7.5%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">LOW</span>
-                <span style="position: absolute; left: 30%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">MEDIUM</span>
-                <span style="position: absolute; left: 57.5%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">HIGH</span>
-                <span style="position: absolute; left: 85%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">VERY HIGH</span>
+                box-shadow: 0 0 15px rgba(0,0,0,0.6);
+                z-index: 100;">
             </div>
         </div>
     </div>
@@ -598,4 +600,5 @@ with st.sidebar:
     
     © 2025 Z. Zampawala et al. All rights reserved.
     """)
+
 
