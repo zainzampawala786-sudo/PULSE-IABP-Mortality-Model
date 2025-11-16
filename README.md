@@ -3,8 +3,8 @@
 **One-Year Mortality Risk Assessment for AMI Patients with IABP Support**
 
 Version: 1.0.0
-Date: 2025-10-20
-Author: Z. Zampawala et al.
+Date: 2025-10-17
+Author: Z. Zampawala et al. 
 
 ---
 
