@@ -403,15 +403,16 @@ if calc_btn:
     </div>
     """, unsafe_allow_html=True)
     
-       # Progress bar visualization - FULLY CORRECTED (25%, 45%, 70%)
+       # Progress bar visualization
     progress_bar_html = f"""
     <div style="margin: 2rem 0;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem; color: #6c757d;">
-            <span>0</span>
-            <span>25</span>
-            <span>45</span>
-            <span>70</span>
-            <span>100</span>
+        <!-- Number markers positioned EXACTLY at color boundaries -->
+        <div style="position: relative; margin-bottom: 0.5rem; height: 20px;">
+            <span style="position: absolute; left: 0%; transform: translateX(0%); font-size: 0.9rem; color: #6c757d;">0</span>
+            <span style="position: absolute; left: 25%; transform: translateX(-50%); font-size: 0.9rem; color: #6c757d;">25</span>
+            <span style="position: absolute; left: 45%; transform: translateX(-50%); font-size: 0.9rem; color: #6c757d;">45</span>
+            <span style="position: absolute; left: 70%; transform: translateX(-50%); font-size: 0.9rem; color: #6c757d;">70</span>
+            <span style="position: absolute; left: 100%; transform: translateX(-100%); font-size: 0.9rem; color: #6c757d;">100</span>
         </div>
         <div style="position: relative; height: 60px; padding: 10px 0;">
             <!-- Color bar with precise breakpoints -->
@@ -530,6 +531,7 @@ with st.sidebar:
     
     © 2025 Z. Zampawala et al. All rights reserved.
     """)
+
 
 
 
