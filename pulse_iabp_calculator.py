@@ -3,7 +3,7 @@
 # Prediction Using Long-term Survival Estimation in AMI Patients Undergoing IABP Support
 # ═══════════════════════════════════════════════════════════════════════════════
 # Version: 1.0.0
-# Updated: 2025-11-11 14:08:15 UTC 
+# Updated: 2025-11-11
 # Developed by: Z. Zampawala et al. (2025)
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -228,7 +228,7 @@ thresholds = bundle["risk_thresholds"]
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def get_risk_category(prob):
-    """Get risk category based on Step 17A thresholds (0.15, 0.45, 0.70)"""
+    """Get risk category based on Step 17A thresholds (0.25, 0.45, 0.70)""" 
     if prob < thresholds['low']:
         return "LOW RISK", "#28a745", "🟢"
     elif prob < thresholds['medium']:
@@ -245,7 +245,7 @@ def get_risk_category(prob):
 st.markdown("""
 <div class="header-box">
     <div class="header-title">PULSE-IABP RISK CALCULATOR</div>
-    <div class="header-subtitle">Prediction Using Long-term Survival Estimation in AMI Patients Undergoing IABP Support</div>
+    <div class="header-subtitle">Prognostic Utility for Long-term Survival Estimation in IABP-supported AMI patients</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -324,13 +324,13 @@ st.markdown('<div class="section-header">METABOLIC & ELECTROLYTES</div>', unsafe
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    glucose_min = st.slider("Glucose, minimum (mmol/L)", 2.0, 25.0, 6.0, 0.1, key="glucose")
+    glucose_min = st.slider("Glucose, minimum (mmol/L)", 1.5, 30.0, 6.0, 0.1, key="glucose")
 
 with col2:
     lactate_max = st.slider("Lactate, peak (mmol/L)", 0.0, 20.0, 2.5, 0.1, key="lactate")
 
 with col3:
-    sodium_max = st.slider("Sodium, peak (mmol/L)", 120, 160, 140, key="sodium")
+    sodium_max = st.slider("Sodium, peak (mmol/L)", 115, 165, 140, key="sodium")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CALCULATE BUTTON
@@ -508,7 +508,7 @@ with st.sidebar:
             st.markdown(f"• Calibration Slope: {perf['calibration']['slope']:.3f}")
     
     st.markdown("**RISK STRATIFICATION:**")
-    st.markdown("• Thresholds: 15%, 45%, 70%")
+    st.markdown("• Thresholds: 25%, 45%, 70%")
     st.markdown("• Trend test: p < 0.001")
     
     st.markdown("---")
@@ -523,6 +523,7 @@ with st.sidebar:
     
     © 2025 Z. Zampawala et al. All rights reserved.
     """)
+
 
 
 
