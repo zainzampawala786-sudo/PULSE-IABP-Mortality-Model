@@ -403,7 +403,7 @@ if calc_btn:
     </div>
     """, unsafe_allow_html=True)
     
-        # Progress bar visualization 
+       # Progress bar visualization - FULLY CORRECTED (25%, 45%, 70%)
     progress_bar_html = f"""
     <div style="margin: 2rem 0;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem; color: #6c757d;">
@@ -414,14 +414,21 @@ if calc_btn:
             <span>100</span>
         </div>
         <div style="position: relative; height: 60px; padding: 10px 0;">
-            <div style="width: 100%; height: 40px; background: linear-gradient(90deg, #28a745 0%, #28a745 25%, #ffc107 25%, #ffc107 45%, #fd7e14 45%, #fd7e14 70%, #dc3545 70%, #dc3545 100%); border-radius: 20px; position: absolute; top: 10px; left: 0;">
-                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center;">
-                    <span style="position: absolute; left: 12.5%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">LOW</span>
-                    <span style="position: absolute; left: 35%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">MEDIUM</span>
-                    <span style="position: absolute; left: 57.5%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">HIGH</span>
-                    <span style="position: absolute; left: 85%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">V.HIGH</span>
-                </div>
+            <!-- Color bar with precise breakpoints -->
+            <div style="width: 100%; height: 40px; border-radius: 20px; position: absolute; top: 10px; left: 0; display: flex; overflow: hidden;">
+                <div style="width: 25%; background-color: #28a745; height: 100%;"></div>
+                <div style="width: 20%; background-color: #ffc107; height: 100%;"></div>
+                <div style="width: 25%; background-color: #fd7e14; height: 100%;"></div>
+                <div style="width: 30%; background-color: #dc3545; height: 100%;"></div>
             </div>
+            <!-- Labels overlay -->
+            <div style="position: absolute; top: 10px; left: 0; width: 100%; height: 40px; display: flex; align-items: center;">
+                <span style="position: absolute; left: 12.5%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">LOW</span>
+                <span style="position: absolute; left: 35%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">MEDIUM</span>
+                <span style="position: absolute; left: 57.5%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">HIGH</span>
+                <span style="position: absolute; left: 85%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">V.HIGH</span>
+            </div>
+            <!-- Patient risk indicator -->
             <div style="position: absolute; left: {risk_score}%; top: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background-color: white; border: 4px solid #2c3e50; border-radius: 50%; box-shadow: 0 0 20px rgba(0,0,0,0.7); z-index: 100;"></div>
         </div>
     </div>
@@ -523,6 +530,7 @@ with st.sidebar:
     
     © 2025 Z. Zampawala et al. All rights reserved.
     """)
+
 
 
 
