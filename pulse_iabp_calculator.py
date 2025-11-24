@@ -458,7 +458,7 @@ if calc_btn:
             st.metric("Risk Category", category)
             st.metric("Category Indicator", emoji)
         
-        st.markdown("**Risk Stratification Thresholds (Step 17A-D validated):**")
+        st.markdown("**Risk Stratification Thresholds:**")
         st.markdown(
             f"- 🟢 **LOW:** < {thresholds['low']*100:.0f}%  \n"
             f"- 🟡 **MEDIUM:** {thresholds['low']*100:.0f}-{thresholds['medium']*100:.0f}%  \n"
@@ -531,6 +531,7 @@ with st.sidebar:
     
     © 2025 Z. Zampawala et al. All rights reserved.
     """)
+
 
 
 
