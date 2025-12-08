@@ -4,7 +4,7 @@
 # ═══════════════════════════════════════════════════════════════════════════════
 # Version: 1.0.0
 # Updated: 2025-11-11
-# Developed by: Zampawala et al. (2025)
+# Developed by: Z. S. Zampawala et al. (2025)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 import streamlit as st
@@ -524,13 +524,14 @@ with st.sidebar:
     st.markdown("### 📄 CITATION INFORMATION")
     st.markdown("""
     Z. S. Zampawala, et al. (2025). External Validation of a Machine Learning Model for One-Year Mortality 
-    in IABP-Treated Acute Myocardial Infarction: The PULSE-IABP Risk Score 
+    in IABP-Treated Acute Myocardial Infarction: The PULSE-IABP Risk Score
     [Journal Name]. [In Press].
     
     DOI: [To be assigned]
     
-    © 2025 Z.S. Zampawala et al. All rights reserved.
+    © 2025 Z. S. Zampawala et al. All rights reserved.
     """)
+
 
 
 
