@@ -485,7 +485,7 @@ st.markdown("""
 
 st.markdown("""
 <div class="footer-text">
-    PULSE-IABP Calculator v1.0.0 • Developed by Z. Zampawala et al. (2025)
+    PULSE-IABP Calculator v1.0.0 • Developed by Z. S. Zampawala et al. (2025)
 </div>
 """, unsafe_allow_html=True)
 
@@ -531,6 +531,7 @@ with st.sidebar:
     
     © 2025 Z. S. Zampawala et al. All rights reserved.
     """)
+
 
 
 
