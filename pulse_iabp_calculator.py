@@ -1,10 +1,10 @@
 # ═══════════════════════════════════════════════════════════════════════════════
 # PULSE-IABP RISK CALCULATOR
-# Prediction Using Long-term Survival Estimation in AMI Patients Undergoing IABP Support
+# Prognostic Utility for Long-term Survival Estimation in IABP-supported AMI
 # ═══════════════════════════════════════════════════════════════════════════════
 # Version: 1.0.0
 # Updated: 2025-11-11
-# Developed by: Z. Zampawala et al. (2025)
+# Developed by: Zampawala et al. (2025)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 import streamlit as st
@@ -218,10 +218,10 @@ def load_model():
         st.stop()
 
 bundle = load_model()
-model = bundle["models"]["calibrated_svm"]  # ✅ Pipeline with built-in scaler
+model = bundle["models"]["calibrated_svm"]  
 features = bundle["model_info"]["features"]
 thresholds = bundle["risk_thresholds"]
-# ✅ REMOVED: scaler = bundle["models"]["scaler"]  # Don't need separate scaler!
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # HELPER FUNCTIONS
@@ -245,7 +245,7 @@ def get_risk_category(prob):
 st.markdown("""
 <div class="header-box">
     <div class="header-title">PULSE-IABP RISK CALCULATOR</div>
-    <div class="header-subtitle">Prognostic Utility for Long-term Survival Estimation in IABP-supported AMI patients</div>
+    <div class="header-subtitle">Prognostic Utility for Long-term Survival Estimation in IABP-supported AMI</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -427,7 +427,7 @@ if calc_btn:
                 <span style="position: absolute; left: 12.5%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">LOW</span>
                 <span style="position: absolute; left: 35%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">MEDIUM</span>
                 <span style="position: absolute; left: 57.5%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">HIGH</span>
-                <span style="position: absolute; left: 85%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">V.HIGH</span>
+                <span style="position: absolute; left: 85%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">VERY HIGH</span>
             </div>
             <!-- Patient risk indicator -->
             <div style="position: absolute; left: {risk_score}%; top: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background-color: white; border: 4px solid #2c3e50; border-radius: 50%; box-shadow: 0 0 20px rgba(0,0,0,0.7); z-index: 100;"></div>
@@ -523,16 +523,14 @@ with st.sidebar:
     
     st.markdown("### 📄 CITATION INFORMATION")
     st.markdown("""
-    Zampawala Z, et al. (2025). PULSE-IABP: Machine Learning Risk Calculator 
-    for One-Year Mortality in AMI Patients with IABP Support. 
+    Z. S. Zampawala, et al. (2025). External Validation of a Machine Learning Model for One-Year Mortality 
+    in IABP-Treated Acute Myocardial Infarction: The PULSE-IABP Risk Score 
     [Journal Name]. [In Press].
     
     DOI: [To be assigned]
     
-    © 2025 Z. Zampawala et al. All rights reserved.
+    © 2025 Z.S. Zampawala et al. All rights reserved.
     """)
-
-
 
 
 
